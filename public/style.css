@@ -143,8 +143,8 @@ body {
 /* two convex plastic fire buttons (red HARD + yellow SOFT) with bezels */
 #touch-controls .btn {
   position: absolute;
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 7px solid #16171b;
   box-shadow:
@@ -156,22 +156,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 1px;
 }
 
 #touch-controls .btn-fire1 {
-  right: calc(98px + env(safe-area-inset-right));
-  bottom: calc(28px + env(safe-area-inset-bottom));
+  right: calc(108px + env(safe-area-inset-right));
+  bottom: calc(22px + env(safe-area-inset-bottom));
   background: radial-gradient(circle at 38% 30%, #ff8274 0%, #d8261a 55%, #7e0f08 100%);
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 #touch-controls .btn-fire2 {
-  right: calc(18px + env(safe-area-inset-right));
-  bottom: calc(98px + env(safe-area-inset-bottom));
+  right: calc(14px + env(safe-area-inset-right));
+  bottom: calc(108px + env(safe-area-inset-bottom));
   background: radial-gradient(circle at 38% 30%, #ffe08a 0%, #e9a91f 55%, #8a5d07 100%);
   color: #5b3c06;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
@@ -298,7 +298,7 @@ body {
    above the whole control cluster instead */
 @media (orientation: portrait) {
   #touch-controls .meta {
-    bottom: calc(196px + env(safe-area-inset-bottom));
+    bottom: calc(224px + env(safe-area-inset-bottom));
   }
 }
 
