@@ -279,7 +279,6 @@ async function becomeHost(): Promise<void> {
   const hasRom = !forceTest && (await romAvailable());
   showCard(`
     <h1>SQUASH</h1>
-    <p class="sub">gaelco &middot; 1992</p>
     <img class="manual" src="/gameplay.png" alt="Squash arcade gameplay"
       onerror="this.remove()">
     ${hasRom ? "" : `<p class="warn">No squash.zip found, so this runs a test pattern.<br>Add the ROM to public/ and redeploy for the real game.</p>`}
@@ -605,7 +604,6 @@ function startSignal(name: string): void {
 function showNameCard(): void {
   showCard(`
     <h1>SQUASH</h1>
-    <p class="sub">Gaelco &middot; 1992 arcade</p>
     <p>The original 1992 Squash arcade cabinet, played head-to-head over the
     internet. One phone runs the real game; the other is the second player's
     controller. No app, no install. Just tap in and play.</p>
