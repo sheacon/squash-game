@@ -1,0 +1,10 @@
+node_modules/
+.wrangler/
+public/app.js
+public/app.js.map
+public/squash.zip
+public/squash.jpg
+public/gameplay.png
+public/logo.png
+wrangler.jsonc
+.DS_Store

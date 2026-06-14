@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05070d">
+<title>SQUASH</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <div id="emulator" hidden></div>
+  <video id="remote" playsinline autoplay muted hidden></video>
+  <audio id="voice" autoplay></audio>
+
+  <div id="touch-controls" hidden>
+    <div class="joy"><div class="joy-nub"></div></div>
+    <div class="btn btn-fire1">HARD</div>
+    <div class="btn btn-fire2">SOFT</div>
+    <div class="meta">
+      <div id="announce"></div>
+      <div id="presence"></div>
+      <div class="coin-hint">COIN adds a credit &middot; then press START</div>
+      <div class="meta-row">
+        <div class="btn-small btn-coin">COIN</div>
+        <div class="btn-small btn-start">START</div>
+        <div class="btn-small btn-talk" id="talk-btn">TALK</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <span id="room"></span>
+    <span id="rtc"></span>
+    <span id="net" hidden></span>
+    <span id="conn" data-s="connecting"></span>
+  </div>
+
+  <div id="overlay">
+    <div id="overlay-card">
+      <h1>SQUASH</h1>
+      <p class="pulse">connecting&hellip;</p>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
