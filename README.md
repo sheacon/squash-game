@@ -92,6 +92,12 @@ share a room.
   directory under `public/` and change `EJS_CDN` in `src/client/host.ts` to remove
   that dependency.
 
+## License
+
+The original code in this repository is licensed under the [MIT License](LICENSE).
+This does not extend to any third-party game assets (see disclaimer below), which
+are not included here.
+
 ## Disclaimer
 
 *Squash* (1992) and all related game assets, artwork, audio, and ROM data are the
