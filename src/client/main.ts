@@ -6,7 +6,7 @@ import {
   type RosterPlayer,
   type SignalData,
 } from "../shared/protocol";
-import { decodeInput, encodeInput, encodePadState, PAD, VOICE_STATE } from "./buttons";
+import { decodeInput, encodeInput, encodePadState, FIRE1, PAD, VOICE_STATE } from "./buttons";
 import {
   installAudioTap,
   installAutoResume,
@@ -109,8 +109,23 @@ function showControls(): void {
   touchControlsEl.hidden = false;
 }
 
-function onCoinPressed(): void {
-  touchControlsEl.querySelector(".coin-hint")?.classList.add("gone");
+// The in-game hint walks a player through the arcade's start sequence. The
+// COIN/START pill stays up until the first START press, which swaps in the
+// player-select hint; that one stays until the first HARD press confirms a
+// player. Both are one-shot — once dismissed they don't return.
+function onStartPressed(): void {
+  const coin = touchControlsEl.querySelector<HTMLElement>(".coin-hint:not(.select-hint)");
+  if (!coin || coin.hidden) return; // only the first START press swaps the hint
+  coin.hidden = true;
+  const select = touchControlsEl.querySelector<HTMLElement>(".select-hint");
+  if (select) {
+    select.classList.remove("gone"); // in case HARD was mashed before START
+    select.hidden = false;
+  }
+}
+
+function onConfirmPressed(): void {
+  touchControlsEl.querySelector(".select-hint")?.classList.add("gone");
 }
 
 function showCard(html: string): void {
@@ -273,7 +288,8 @@ async function becomeHost(): Promise<void> {
     // Same controls as the guest, wired straight into Player 1.
     if (isTouchDevice()) {
       const controls = new TouchControls(touchControlsEl, (id, value) => {
-        if (id === PAD.SELECT && value) onCoinPressed();
+        if (value && id === PAD.START) onStartPressed();
+        else if (value && id === FIRE1) onConfirmPressed();
         hostGame?.localInput(id, value);
       });
       showControls();
@@ -428,7 +444,8 @@ function becomeGuest(): void {
   guestSession = newGuestSession();
 
   const controls = new TouchControls(touchControlsEl, (id, value) => {
-    if (id === PAD.SELECT && value) onCoinPressed();
+    if (value && id === PAD.START) onStartPressed();
+    else if (value && id === FIRE1) onConfirmPressed();
     sendPad(id, value);
   });
   bindKeyboard(sendPad);
