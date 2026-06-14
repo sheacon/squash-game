@@ -77,37 +77,47 @@ export function setGameDuck(ducked: boolean): void {
   }
 }
 
-// EmulatorJS pauses itself when the page is backgrounded and shows a broken
-// "undefined / Click to resume" screen. Resume automatically on return.
+// Clear EmulatorJS's broken "undefined / Click to resume" pause overlay (it
+// renders on top of our UI) and make sure the core and its audio are actually
+// running. Safe to call repeatedly and from any context.
+export function resumeEmulator(): void {
+  const em = window.EJS_emulator;
+  try {
+    const resumeAudio = () => {
+      for (const ctx of taps.keys()) {
+        if (ctx.state === "suspended") void (ctx as AudioContext).resume();
+      }
+    };
+    // common case during play: core is running, just keep audio unlocked and
+    // skip the DOM scan below on every tap
+    if (em && !em.paused) {
+      resumeAudio();
+      return;
+    }
+    if (em?.paused) em.play();
+    // some pause overlays only clear via their own resume element
+    for (const el of document.querySelectorAll<HTMLElement>("#emulator div, #emulator span")) {
+      if (/click to resume/i.test(el.textContent ?? "")) {
+        el.click();
+        break;
+      }
+    }
+    resumeAudio();
+  } catch {}
+}
+
+// EmulatorJS pauses itself when the page is backgrounded, and on iOS it often
+// comes up paused right after boot (before a gesture unlocks audio), showing
+// that broken screen over our UI. Resume on any return to the page and on the
+// host's first tap (which is also iOS's chance to unlock audio), so it never
+// lingers as the first thing the host sees.
 export function installAutoResume(): void {
-  const resume = () => {
-    setTimeout(() => {
-      const em = window.EJS_emulator;
-      try {
-        if (em?.paused) em.play();
-        // some pause overlays only clear via their own resume element
-        for (const el of document.querySelectorAll<HTMLElement>("#emulator div, #emulator span")) {
-          if (/click to resume/i.test(el.textContent ?? "")) {
-            el.click();
-            break;
-          }
-        }
-        for (const ctx of taps.keys()) {
-          if (ctx.state === "suspended") void (ctx as AudioContext).resume();
-        }
-      } catch {}
-    }, 250);
-  };
+  const resume = () => setTimeout(resumeEmulator, 250);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") resume();
   });
   window.addEventListener("focus", resume);
-  // iOS may keep audio suspended until a real gesture lands
-  document.addEventListener("pointerdown", () => {
-    for (const ctx of taps.keys()) {
-      if (ctx.state === "suspended") void (ctx as AudioContext).resume();
-    }
-  });
+  document.addEventListener("pointerdown", resume);
 }
 
 function tappedAudioTracks(): MediaStreamTrack[] {

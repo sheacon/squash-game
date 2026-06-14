@@ -10,6 +10,7 @@ import { decodeInput, encodeInput, encodePadState, FIRE1, PAD, VOICE_STATE } fro
 import {
   installAudioTap,
   installAutoResume,
+  resumeEmulator,
   setGameDuck,
   romAvailable,
   startEmulator,
@@ -110,12 +111,19 @@ function showControls(): void {
 }
 
 // The in-game hint walks a player through the arcade's start sequence. The
-// COIN/START pill stays up until the first START press, which swaps in the
-// player-select hint; that one stays until the first HARD press confirms a
-// player. Both are one-shot — once dismissed they don't return.
+// COIN/START pill stays up until a coin goes in AND then START is pressed,
+// which swaps in the player-select hint; that one stays until the first HARD
+// press confirms a player. Both are one-shot: once dismissed they don't return.
+let coinInserted = false;
+
+function onCoinInserted(): void {
+  coinInserted = true;
+}
+
 function onStartPressed(): void {
+  if (!coinInserted) return; // arcade flow: insert COIN first, then press START
   const coin = touchControlsEl.querySelector<HTMLElement>(".coin-hint:not(.select-hint)");
-  if (!coin || coin.hidden) return; // only the first START press swaps the hint
+  if (!coin || coin.hidden) return; // only the first qualifying START swaps it
   coin.hidden = true;
   const select = touchControlsEl.querySelector<HTMLElement>(".select-hint");
   if (select) {
@@ -139,7 +147,11 @@ function hideCard(): void {
 function shareLink(): void {
   const url = location.href;
   if (navigator.share) {
-    navigator.share({ title: "SQUASH — play me!", url }).catch(() => {});
+    navigator.share({
+      title: "SQUASH",
+      text: "Play the 1992 Squash arcade game with me, head-to-head:",
+      url,
+    }).catch(() => {});
   } else {
     void navigator.clipboard.writeText(url).then(() => {
       const note = cardEl.querySelector(".copied");
@@ -288,7 +300,8 @@ async function becomeHost(): Promise<void> {
     // Same controls as the guest, wired straight into Player 1.
     if (isTouchDevice()) {
       const controls = new TouchControls(touchControlsEl, (id, value) => {
-        if (value && id === PAD.START) onStartPressed();
+        if (value && id === PAD.SELECT) onCoinInserted();
+        else if (value && id === PAD.START) onStartPressed();
         else if (value && id === FIRE1) onConfirmPressed();
         hostGame?.localInput(id, value);
       });
@@ -304,6 +317,9 @@ async function becomeHost(): Promise<void> {
     }
     (window as any).__hostReady = true; // e2e test hook
     afterBoot();
+    // clear any pause overlay the core came up with, so the host doesn't land
+    // on the broken "undefined / Click to resume" screen behind the card
+    if (hasRom) resumeEmulator();
   });
 }
 
@@ -444,7 +460,8 @@ function becomeGuest(): void {
   guestSession = newGuestSession();
 
   const controls = new TouchControls(touchControlsEl, (id, value) => {
-    if (value && id === PAD.START) onStartPressed();
+    if (value && id === PAD.SELECT) onCoinInserted();
+    else if (value && id === PAD.START) onStartPressed();
     else if (value && id === FIRE1) onConfirmPressed();
     sendPad(id, value);
   });
@@ -585,6 +602,10 @@ function startSignal(name: string): void {
 function showNameCard(): void {
   showCard(`
     <h1>SQUASH</h1>
+    <p class="sub">Gaelco &middot; 1992 arcade</p>
+    <p>The original 1992 Squash arcade cabinet, played head-to-head over the
+    internet. One phone runs the real game; the other is the second player's
+    controller. No app, no install. Just tap in and play.</p>
     <p>Who's playing on this phone?</p>
     <input id="name-input" maxlength="${NAME_MAX}" placeholder="YOUR NAME"
       autocomplete="off" autocapitalize="characters" spellcheck="false">
