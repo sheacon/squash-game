@@ -91,3 +91,14 @@ share a room.
 - EmulatorJS loads from its CDN (`cdn.emulatorjs.org`); self-host the `data/`
   directory under `public/` and change `EJS_CDN` in `src/client/host.ts` to remove
   that dependency.
+
+## Disclaimer
+
+*Squash* (1992) and all related game assets, artwork, audio, and ROM data are the
+property of **Gaelco, S.A.**, the original developer and copyright holder. This
+project is an unofficial, non-commercial fan harness with no affiliation with,
+endorsement by, or sponsorship from Gaelco. It bundles **no** ROM, game art, audio,
+or other Gaelco material; those files are gitignored and you must supply your own
+legally obtained copy of the romset to play. Only the original networking, client,
+and server code in this repository is offered under its license. If you are a Gaelco
+rightsholder and want this taken down, open an issue and it will be removed.
