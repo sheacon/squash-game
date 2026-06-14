@@ -283,7 +283,10 @@ async function becomeHost(): Promise<void> {
     <img class="manual" src="/gameplay.png" alt="Squash arcade gameplay"
       onerror="this.remove()">
     ${hasRom ? "" : `<p class="warn">No squash.zip found, so this runs a test pattern.<br>Add the ROM to public/ and redeploy for the real game.</p>`}
-    <p>The game is hosted on this phone. Play solo against the computer, or share the generated link with a friend for multiplayer.</p>
+    <p>The original 1992 Gaelco arcade game, running right here in the browser.
+    This phone is the cabinet: play solo against the computer, or share the link
+    and a friend joins from their own phone as the second player, live over the
+    internet.</p>
     <button id="boot-btn" class="big">${hasRom ? "START MACHINE" : "START TEST PATTERN"}</button>
   `);
   $("boot-btn").addEventListener("click", async () => {
