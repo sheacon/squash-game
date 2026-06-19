@@ -136,6 +136,21 @@ function onConfirmPressed(): void {
   touchControlsEl.querySelector(".select-hint")?.classList.add("gone");
 }
 
+// Desktop has no on-screen COIN/START/HARD buttons, so the hint flow above is
+// driven straight from the keyboard. The keys match the legend and the host's
+// EJS_defaultControls / the guest's bindKeyboard: C = coin, Enter = start,
+// Z = hard. This only advances the hint UI; the actual game input is handled
+// separately (EmulatorJS on the host, sendPad on the guest).
+function bindDesktopHints(): void {
+  window.addEventListener("keydown", (e) => {
+    if (e.repeat) return;
+    const k = e.key.toLowerCase();
+    if (k === "c") onCoinInserted();
+    else if (k === "enter") onStartPressed();
+    else if (k === "z") onConfirmPressed();
+  });
+}
+
 function showCard(html: string): void {
   cardEl.innerHTML = html;
   overlayEl.hidden = false;
@@ -283,9 +298,9 @@ async function becomeHost(): Promise<void> {
       onerror="this.remove()">
     ${hasRom ? "" : `<p class="warn">No squash.zip found, so this runs a test pattern.<br>Add the ROM to public/ and redeploy for the real game.</p>`}
     <p>The original 1992 Gaelco arcade game, running right here in the browser.
-    This phone is the cabinet: play solo against the computer, or share the link
-    and a friend joins from their own phone as the second player, live over the
-    internet.</p>
+    Your device is the arcade machine host: play solo against the computer, or
+    share the link and a friend joins from their own device as the second player,
+    live over the internet. Works on mobile or computer.</p>
     <button id="boot-btn" class="big">${hasRom ? "START MACHINE" : "START TEST PATTERN"}</button>
   `);
   $("boot-btn").addEventListener("click", async () => {
@@ -313,9 +328,10 @@ async function becomeHost(): Promise<void> {
       });
     } else {
       // desktop host plays with the keyboard via EmulatorJS, but still gets
-      // the presence strip and join/leave announcements
+      // the presence strip, join/leave announcements, and keyboard hints
       touchControlsEl.classList.add("desktop");
       touchControlsEl.hidden = false;
+      bindDesktopHints();
     }
     (window as any).__hostReady = true; // e2e test hook
     afterBoot();
@@ -332,12 +348,15 @@ function afterBoot(): void {
   } else {
     showCard(`
       <h1>READY</h1>
-      <p>Share this link with a friend for multiplayer:</p>
+      <p>Share this link, then wait here. The game starts the moment your
+      friend joins, no extra tap needed.</p>
       <p class="link">${location.href}</p>
       <button id="share-btn" class="big">SHARE LINK</button>
       <p class="copied sub"></p>
-      <button id="solo-btn" class="secondary">PLAY SOLO</button>
-      <p class="sub">Your friend can still join mid-game with the link</p>
+      <p class="pulse sub">waiting for your friend&hellip;</p>
+      <hr class="card-rule">
+      <button id="solo-btn" class="secondary">PLAY SOLO INSTEAD</button>
+      <p class="sub">Play the computer now; your friend can still join mid-game.</p>
       ${TIPS_HTML}
     `);
     $("share-btn").addEventListener("click", shareLink);
@@ -468,6 +487,13 @@ function becomeGuest(): void {
     sendPad(id, value);
   });
   bindKeyboard(sendPad);
+  // On a desktop guest the keyboard is the real input, so swap the touch
+  // widgets for the keyboard legend (same .desktop view the host uses) and
+  // drive the COIN/START hint flow from the keyboard.
+  if (!isTouchDevice()) {
+    touchControlsEl.classList.add("desktop");
+    bindDesktopHints();
+  }
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") controls.releaseAll();
   });
@@ -605,9 +631,9 @@ function showNameCard(): void {
   showCard(`
     <h1>SQUASH</h1>
     <p>The original 1992 Squash arcade cabinet, played head-to-head over the
-    internet. One phone runs the real game; the other is the second player's
-    controller. No app, no install. Just tap in and play.</p>
-    <p>Who's playing on this phone?</p>
+    internet. One device runs the real game; the other is the second player's
+    controller. No app, no install. Just jump in and play.</p>
+    <p>Who's playing on this device?</p>
     <input id="name-input" maxlength="${NAME_MAX}" placeholder="YOUR NAME"
       autocomplete="off" autocapitalize="characters" spellcheck="false">
     <button id="name-btn" class="big" disabled>LET'S PLAY</button>

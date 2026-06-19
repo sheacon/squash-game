@@ -7,7 +7,12 @@
   "compatibility_date": "2026-05-01",
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Run the Worker before assets for the landing page only, so the "visit"
+    // analytics fire on "/". Without this, index.html is served straight from
+    // the asset binding and fetch() never runs for the document. Every other
+    // path still hits assets first. The Worker then proxies "/" to ASSETS.
+    "run_worker_first": ["/"]
   },
   // Optional: serve from your own domain. Cloudflare creates the DNS record and
   // certificate on deploy. Delete this line to deploy only to <name>.workers.dev.
@@ -17,5 +22,9 @@
     "bindings": [{ "name": "ROOM", "class_name": "GameRoom" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+  // Usage analytics for the /stats dashboard. Dataset is created on first write.
+  // The dashboard also needs three secrets: CF_ACCOUNT_ID, CF_API_TOKEN
+  // (Account Analytics Read), and STATS_KEY. See the "Usage stats" README section.
+  "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "squash_events" }],
   "observability": { "enabled": true }
 }

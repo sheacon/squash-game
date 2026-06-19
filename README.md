@@ -68,6 +68,32 @@ deploy. The workers.dev URL stays enabled so older shared links keep working;
 rooms are keyed by code, not origin, so players on different hostnames can
 share a room.
 
+## Usage stats
+
+A self-hosted dashboard at **`/stats`** (e.g. `https://<your-domain>/stats?key=…`)
+shows page visits, games hosted, guests joined, 2-player matches, a 14-day visits
+chart, and a country breakdown. It runs on
+[Workers Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/):
+the worker writes one data point per visit/join/match (`src/worker/analytics.ts`)
+and the dashboard reads them back through the SQL API (`src/worker/stats.ts`).
+Game traffic stays P2P; only these coarse counters are recorded (event, country,
+role, room code), no IPs or personal data. Free-tier writes and ~90-day retention
+comfortably cover a launch.
+
+The `ANALYTICS` binding is already in `wrangler.jsonc`; the dataset is created on
+first write. Add three secrets so `/stats` can query and stay private:
+
+```sh
+wrangler secret put CF_ACCOUNT_ID    # your Cloudflare account id
+wrangler secret put CF_API_TOKEN     # API token, scope: Account Analytics → Read
+wrangler secret put STATS_KEY        # any passphrase; /stats requires ?key=<this>
+npm run deploy
+```
+
+If `STATS_KEY` is unset the page is open; if the account id / token are unset it
+returns a "not configured" notice instead of data. Under `wrangler dev` no data
+points are recorded (the local binding is a no-op).
+
 ## Known tuning points
 
 - `src/client/tuning.ts`: every bandwidth/quality knob for the guest's stream

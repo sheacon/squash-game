@@ -203,13 +203,44 @@ body {
   gap: 12px;
 }
 
-/* desktop host: presence/announcements/talk only, no game touch widgets */
+/* desktop: no on-screen game widgets, just a keyboard legend + presence/talk.
+   The COIN/START/player-select hints stay (driven by the keyboard instead of
+   the touch sink, see bindDesktopHints in main.ts). */
 #touch-controls.desktop .joy,
 #touch-controls.desktop .btn,
 #touch-controls.desktop .btn-coin,
-#touch-controls.desktop .btn-start,
-#touch-controls.desktop .coin-hint {
+#touch-controls.desktop .btn-start {
   display: none;
+}
+
+/* keyboard legend: desktop-only, mirrors the keys bound in touch.ts/host.ts */
+.kbd-legend {
+  display: none;
+}
+#touch-controls.desktop .kbd-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 92vw;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #aeb9c7;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 7px 12px;
+  border-radius: 8px;
+}
+#touch-controls.desktop .kbd-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+#touch-controls.desktop .kbd-legend b {
+  color: #eef3f9;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 /* who's on court: P1/P2 names + waiting count */
@@ -465,6 +496,14 @@ body {
 #overlay-card p { font-size: 14px; line-height: 1.45; }
 #overlay-card .sub { color: rgba(28, 39, 51, 0.55); font-size: 12px; letter-spacing: 1px; }
 #overlay-card .warn { color: #a3540d; font-size: 12px; }
+
+#overlay-card .card-rule {
+  width: 100%;
+  height: 0;
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid rgba(28, 39, 51, 0.15);
+}
 
 #overlay-card .link {
   font-size: 12px;

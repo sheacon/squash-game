@@ -15,6 +15,7 @@ declare global {
     EJS_backgroundColor: string;
     EJS_Buttons: Record<string, boolean>;
     EJS_VirtualGamepadSettings: unknown[];
+    EJS_defaultControls: Record<number, Record<number, { value: string; value2?: string }>>;
     EJS_defaultOptions: Record<string, string>;
     EJS_onGameStart?: () => void;
     EJS_emulator?: any;
@@ -213,6 +214,27 @@ export function startEmulator(container: HTMLElement): Promise<HostGame> {
       saveSavFiles: false,
       loadSavFiles: false,
       exitEmulation: false,
+    };
+
+    // Desktop host plays via EmulatorJS's own keyboard capture (Player 1).
+    // Override its defaults so the keys match the guest's bindKeyboard scheme
+    // (touch.ts) and the on-screen legend: arrows move, Z = HARD (B),
+    // X = SOFT (A), C = COIN (SELECT), Enter = START. value2 keeps gamepad
+    // support intact. Button indices are libretro RetroPad ids (see buttons.ts).
+    window.EJS_defaultControls = {
+      0: {
+        0: { value: "z", value2: "BUTTON_2" }, // B  = HARD
+        2: { value: "c", value2: "SELECT" }, // SELECT = COIN
+        3: { value: "enter", value2: "START" }, // START
+        4: { value: "up arrow", value2: "DPAD_UP" },
+        5: { value: "down arrow", value2: "DPAD_DOWN" },
+        6: { value: "left arrow", value2: "DPAD_LEFT" },
+        7: { value: "right arrow", value2: "DPAD_RIGHT" },
+        8: { value: "x", value2: "BUTTON_1" }, // A  = SOFT
+      },
+      1: {},
+      2: {},
+      3: {},
     };
 
     // Suppress EmulatorJS's own virtual gamepad entirely: the host uses the

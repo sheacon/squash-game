@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { countryOf, track } from "./analytics";
 import {
   parseClientMsg,
   sanitizeName,
@@ -9,6 +10,12 @@ import {
 export interface Env {
   ROOM: DurableObjectNamespace;
   ASSETS: Fetcher;
+  // Usage analytics (see analytics.ts / stats.ts). All optional so the worker
+  // runs unchanged if the dataset/secrets aren't configured.
+  ANALYTICS?: AnalyticsEngineDataset;
+  CF_ACCOUNT_ID?: string;
+  CF_API_TOKEN?: string;
+  STATS_KEY?: string;
 }
 
 interface Meta {
@@ -105,6 +112,14 @@ export class GameRoom extends DurableObject<Env> {
     this.broadcastPlayersExcept(server, { t: "peer", connected: true });
     this.pushQueueState();
     await this.ctx.storage.setAlarm(Date.now() + JANITOR_MS);
+
+    // Usage analytics: who took a seat, and whether that completed a 2-player
+    // pairing. The just-accepted socket is already counted by connected().
+    const country = countryOf(request);
+    track(this.env, "join", { country, role: slot === 0 ? "host" : "guest", room: meta.room });
+    if (this.connected(0) && this.connected(1)) {
+      track(this.env, "match", { country, room: meta.room });
+    }
 
     return new Response(null, { status: 101, webSocket: client });
   }

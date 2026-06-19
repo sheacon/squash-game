@@ -1,4 +1,6 @@
 import { GameRoom, type Env } from "./room";
+import { countryOf, track } from "./analytics";
+import { renderStats } from "./stats";
 
 export { GameRoom };
 
@@ -13,10 +15,18 @@ export default {
       const id = env.ROOM.idFromName(match[1]);
       return env.ROOM.get(id).fetch(request);
     }
-    // Everything else is a static asset. Proxy explicitly instead of relying
-    // on platform fallthrough: wrangler dev (4.99/4.100) stops routing "/" to
-    // assets when a custom_domain route is configured, and the binding serves
-    // identically in production either way (including its own 404s).
+    if (url.pathname === "/stats") {
+      return renderStats(request, env);
+    }
+    // Count the landing-page document load (one per visit). This branch only
+    // runs because assets.run_worker_first = ["/"] routes "/" through the
+    // Worker first; every other asset (js/css/images) is served by the binding
+    // before the Worker is ever invoked.
+    if (url.pathname === "/") {
+      track(env, "visit", { country: countryOf(request) });
+    }
+    // Proxy to the asset binding ourselves. For "/" this is required (the
+    // Worker ran first); for any non-asset path it serves the binding's 404.
     return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;
