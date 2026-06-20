@@ -93,13 +93,13 @@ function wireVoice(sender: RTCRtpSender | null, track: MediaStreamTrack | null):
 
 hudRoom.textContent = "#" + code;
 
-// Gameplay tips from the original game's instructions. They live on the menu
-// cards (where players are idle and can read), not over live gameplay; the
-// shot strengths are labeled on the fire buttons themselves (HARD/SOFT).
+// One durable fact for the idle menu cards (where players wait and can read).
+// The actionable, moment-to-moment hints instead cycle over live gameplay via
+// the play-hint pill (see PLAY_HINTS); the shot strengths are labeled on the
+// fire buttons themselves (HARD/SOFT).
 const TIPS_HTML = `
   <div class="tips">
     <p>First to nine points wins the game. Best of five games.</p>
-    <p>At the moment you swing, aim the joystick.</p>
   </div>
 `;
 
@@ -132,8 +132,70 @@ function onStartPressed(): void {
   }
 }
 
+// HARD does double duty at the start: the first press confirms your player, the
+// next one serves. So the flow is a two-step state machine on HARD presses —
+// confirm shows the serve cue, and the serve itself dismisses it and rolls into
+// the rotating play hints. The cue stays up until that serve, however long it
+// takes (no timer).
+let confirmStage = 0; // 0 = unconfirmed, 1 = serve cue up, 2 = serving / done
+
 function onConfirmPressed(): void {
-  touchControlsEl.querySelector(".select-hint")?.classList.add("gone");
+  const select = touchControlsEl.querySelector<HTMLElement>(".select-hint");
+  if (!select) return;
+  if (confirmStage === 0) {
+    if (select.hidden) return; // wait until the confirm prompt is up
+    confirmStage = 1;
+    select.textContent = "HARD is for serving";
+  } else if (confirmStage === 1) {
+    confirmStage = 2;
+    select.classList.add("gone");
+    window.setTimeout(() => {
+      select.hidden = true;
+      startPlayHints();
+    }, 500); // matches the .coin-hint opacity transition
+  }
+}
+
+// Once play is underway the pill cycles short gameplay/strategy hints: each
+// fades in and lingers a good while, then the pill rests before the next.
+// Looping is fine; a hint resurfacing mid-match is a gentle reminder, not noise.
+const PLAY_HINTS = [
+  "The blue and red arrows indicate first and second bounce targets",
+  "The instant you swing, aim with the joystick",
+  "After every shot, move back to the T at center court",
+  "Volley whenever you can",
+  "Aim for the back corners to push your rival deep",
+  "Mix HARD and SOFT shots to keep them guessing",
+];
+const HINT_SHOW_MS = 30000;
+const HINT_REST_MS = 15000;
+
+let playHintEl: HTMLElement | null = null;
+let playHintIndex = 0;
+let playHintStarted = false;
+
+function startPlayHints(): void {
+  if (playHintStarted) return;
+  playHintStarted = true;
+  playHintEl = touchControlsEl.querySelector<HTMLElement>(".play-hint");
+  if (playHintEl) cyclePlayHint();
+}
+
+function cyclePlayHint(): void {
+  const el = playHintEl;
+  if (!el) return;
+  el.textContent = PLAY_HINTS[playHintIndex];
+  playHintIndex = (playHintIndex + 1) % PLAY_HINTS.length;
+  el.hidden = false;
+  el.classList.add("gone"); // mount transparent, then fade in next frame
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("gone")));
+  window.setTimeout(() => {
+    el.classList.add("gone");
+    window.setTimeout(() => {
+      el.hidden = true; // reclaim the layout slot while the pill rests
+      window.setTimeout(cyclePlayHint, HINT_REST_MS);
+    }, 500); // matches the .coin-hint opacity transition
+  }, HINT_SHOW_MS);
 }
 
 // Desktop has no on-screen COIN/START/HARD buttons, so the hint flow above is
